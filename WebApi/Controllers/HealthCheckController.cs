@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 [AllowAnonymous]
 [ApiController]
 [Route("api/v1/[controller]")]
-public class TestController : ControllerBase
+public class HealthCheckController : ControllerBase
 {
     [HttpGet("~/health")]
-    public IActionResult Endpoint2() => this.Ok("Healthy");
+    public IActionResult PerformCheck() => this.Ok("Healthy");
 }
