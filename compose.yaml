@@ -1,0 +1,35 @@
+services:
+  apigateway:
+    build:
+      context: ./Proxy  # Path to the folder containing the Dockerfile for apigateway
+      dockerfile: Dockerfile  # Optional if the Dockerfile is named "Dockerfile" in the directory
+    container_name: apigateway
+    ports:
+      - "5011:5011"
+    environment:
+      - LISTEN_PORT=5011
+      # - PROXY_HOST=host.docker.internal:5012 # If running in an IDE, you can use this
+      - PROXY_HOST=webapi:5012
+
+  toplevelproxy:
+    build:
+      context: ./Proxy  # Path to the folder containing the Dockerfile for toplevelproxy
+      dockerfile: Dockerfile
+    container_name: toplevelproxy
+    ports:
+      - "5010:5010"
+    depends_on:
+      - apigateway  # Ensures apigateway starts before toplevelproxy
+    environment:
+      - LISTEN_PORT=5010
+      - PROXY_HOST=apigateway:5011
+
+  webapi:
+    build:
+      context: ./WebApi  # Path to the folder containing the Dockerfile for toplevelproxy
+      dockerfile: Dockerfile
+    container_name: webapi
+    ports:
+      - "5012:5012"
+    environment:
+      - ASPNETCORE_HTTP_PORTS=5012

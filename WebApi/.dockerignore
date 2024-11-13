@@ -1,0 +1,2 @@
+#ignore this file in case of local builds!
+**/appsettings.local.json

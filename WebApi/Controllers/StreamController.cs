@@ -20,27 +20,48 @@ public class StreamController : ControllerBase
     [HttpGet]
     public async Task StreamData(
         [FromQuery]int lines,
+        [FromQuery]int? initialDelay,
         [FromQuery]int delay,
+        [FromQuery(Name ="throw")]bool throwException,
         CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("Handling request. Lines: {Lines}, Delay: {Delay}", lines, delay);
-        
-        this.Response.ContentType = "text/plain";
-
-        await foreach (var data in this.GetDataStream(lines, delay, cancellationToken))
+        try
         {
-            if (cancellationToken.IsCancellationRequested)
+            this.logger.LogInformation("Handling request. Lines: {Lines}, Delay: {Delay}, Throw: {Throw}", lines, delay, throwException);
+            
+            // Delay before ANY part of the response has been read
+            if (initialDelay.HasValue)
             {
-                this.logger.LogInformation("Cancellation token was set");
-                break;
+                await Task.Delay(TimeSpan.FromSeconds(initialDelay.Value), cancellationToken);
             }
 
-            // Write each item to the response
-            await this.Response.WriteAsync($"{data}\n", cancellationToken);
-            await this.Response.Body.FlushAsync(cancellationToken); // Flush after each write to ensure data is sent immediately
+            this.Response.ContentType = "text/plain";
+
+            await foreach (var data in this.GetDataStream(lines, delay, cancellationToken))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    this.logger.LogInformation("Cancellation token was set");
+
+                    break;
+                }
+
+                // Write each item to the response
+                await this.Response.WriteAsync($"{data}\n", cancellationToken);
+                await this.Response.Body.FlushAsync(cancellationToken); // Flush after each write to ensure data is sent immediately
+            }
+
+            this.logger.LogInformation("Completed request. Lines: {Lines}, Delay: {Delay}", lines, delay);
         }
-        
-        this.logger.LogInformation("Completed request. Lines: {Lines}, Delay: {Delay}", lines, delay);
+        catch (Exception exception)
+        {
+            this.logger.LogWarning(exception, "An Exception was thrown");
+
+            if (throwException)
+            {
+                throw;
+            }
+        }
     }
 
     private async IAsyncEnumerable<string> GetDataStream(
