@@ -1,33 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
-using WebApi;
-using WebApi.Handlers;
-
 var builder = WebApplication.CreateBuilder(args);
-
-// builder.Services.AddAuthentication()
-//     .AddScheme<AuthenticationSchemeOptions, CustomAuthHandler2>(AuthConstants.Scheme2, options => { })
-//     .AddScheme<AuthenticationSchemeOptions, CustomAuthHandler1>(AuthConstants.Scheme1, options => { });
-
-// Add services to the container.
-builder.Services.AddAuthentication(
-        options =>
-        {
-            options.DefaultAuthenticateScheme = AuthConstants.Scheme1;
-            options.DefaultChallengeScheme = AuthConstants.Scheme1;
-        })
-    .AddScheme<AuthenticationSchemeOptions, CustomAuthHandler1>(AuthConstants.Scheme1, options => { })
-    .AddScheme<AuthenticationSchemeOptions, CustomAuthHandler2>(AuthConstants.Scheme2, options => { });
-
-// builder.Services.AddAuthorization(
-//     options =>
-//     {
-//         var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(
-//             AuthConstants.Scheme1,
-//             AuthConstants.Scheme2);
-//
-//         defaultAuthorizationPolicyBuilder = defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
-//         options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
-//     });
 
 builder.Services.AddControllers();
 
@@ -46,4 +17,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
