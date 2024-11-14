@@ -48,12 +48,8 @@ internal sealed class TestService : ITestService
         }
 
         var url = this.options.CurrentValue.Api.ApiBaseUrl
-            .AppendPathSegment("api/v1/test/delay");
-
-        if (useServerSideCancellationToken)
-        {
-            url = url.AppendQueryParam("useCancellationToken", useClientSideCancellationToken);
-        }
+            .AppendPathSegment("api/v1/test/delay")
+            .AppendQueryParam("useCancellationToken", useServerSideCancellationToken);
 
         if (serverSideDelay.HasValue)
         {
