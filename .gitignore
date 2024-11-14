@@ -215,3 +215,5 @@ appsettings.local.json
 
 #coverlet
 TestResults/
+
+*.env

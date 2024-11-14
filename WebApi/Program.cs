@@ -1,4 +1,20 @@
+using WebApi.Configuration;
+using WebApi.Services;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
+var configurationSection = builder.Configuration.GetSection("WebApi");
+builder.Services.Configure<ApplicationConfiguration>(configurationSection);
+
+ApplicationConfiguration config = new();
+configurationSection.Bind(config);
+
+if (config.Server.ShutDownTime.HasValue)
+{
+    builder.WebHost.UseShutdownTimeout(config.Server.ShutDownTime.Value);
+}
 
 builder.Services.AddControllers();
 
@@ -9,6 +25,8 @@ builder.Services.AddHttpLogging(
         options.RequestHeaders.Add("X-Forwarded-For");
         options.RequestHeaders.Add("X-Forwarded-Proto");
     });
+
+builder.Services.AddScoped<ITestService, TestService>();
 
 var app = builder.Build();
 
