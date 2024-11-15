@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SSE Client with Start and Stop Buttons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #messages {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        #startButton, #stopButton, #clearButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input[type="text"] {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+<h1>Server-Sent Events Demo</h1>
+<div class="input-group">
+    <label for="sseUrl">Url:</label>
+    <input type="text" id="sseUrl" name="sseUrl" placeholder="Enter SSE URL">
+</div>
+<button id="startButton">Start SSE</button>
+<button id="stopButton" disabled>Stop SSE</button>
+<button id="clearButton">Clear Messages</button>
+<br><br>
+<label for="messages"></label><textarea id="messages" readonly></textarea>
+
+<script src="sse.js"></script>
+</body>
+</html>

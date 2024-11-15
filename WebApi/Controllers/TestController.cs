@@ -3,7 +3,6 @@ namespace WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
-using WebApi.Models;
 using WebApi.Services;
 
 [ApiController]

@@ -78,6 +78,8 @@ app.Lifetime.ApplicationStopped.Register(
 // app.UseHttpLogging();
 app.UseSerilogRequestLogging();
 
+app.UseStaticFiles();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
