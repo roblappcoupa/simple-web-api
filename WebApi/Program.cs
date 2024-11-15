@@ -30,15 +30,23 @@ builder.Services.AddSerilog(
             .ReadFrom.Configuration(builder.Configuration);
     });
 
-if (config.Server.ShutDownTime.HasValue)
-{
-    Log.Logger.Information("Using non-default shut down time of {ShutDownTime}", config.Server.ShutDownTime.Value.ToString("g"));
-    builder.WebHost.UseShutdownTimeout(config.Server.ShutDownTime.Value);
-}
-
 builder.Services.AddControllers();
 
-// FOR REQUEST LOGGING
+builder.Services.AddCors(
+    options =>
+    {
+        options.AddPolicy(
+            "AllowAllPolicy",
+            corsPolicyBuilder =>
+            {
+                corsPolicyBuilder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+    });
+
+// FOR ALTERNATIVE REQUEST LOGGING
 // builder.Services.AddHttpLogging(
 //     options =>
 //     {
@@ -48,6 +56,12 @@ builder.Services.AddControllers();
 //     });
 
 builder.Services.AddScoped<ITestService, TestService>();
+
+if (config.Server.ShutDownTime.HasValue)
+{
+    Log.Logger.Information("Using non-default shut down time of {ShutDownTime}", config.Server.ShutDownTime.Value.ToString("g"));
+    builder.WebHost.UseShutdownTimeout(config.Server.ShutDownTime.Value);
+}
 
 var app = builder.Build();
 
@@ -74,19 +88,21 @@ app.Lifetime.ApplicationStopped.Register(
         Log.Logger.Information("Stopped application");
     });
 
-// FOR REQUEST LOGGING
-// app.UseHttpLogging();
-app.UseSerilogRequestLogging();
-
-app.UseStaticFiles();
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
 
+// FOR ALTERNATIVE REQUEST LOGGING
+// app.UseHttpLogging();
+
+app.UseSerilogRequestLogging();
+
+app.UseStaticFiles();
+
 app.UseRouting();
+
+app.UseCors("AllowAllPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
