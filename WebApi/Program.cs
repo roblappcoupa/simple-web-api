@@ -1,9 +1,16 @@
+using System.Diagnostics;
 using Serilog;
+using Serilog.Templates;
+using Serilog.Templates.Themes;
 using WebApi.Configuration;
 using WebApi.Services;
 
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .WriteTo.Console(
+        new ExpressionTemplate(
+            "{@t:yyyy-MM-dd HH:mm:ss.fff} [{@l}] {#if SourceContext is not null}[{SourceContext}]{#end} {@m}{#if @x is not null}\n{@p}{#end}\n{@x}\n",
+            theme: TemplateTheme.Code
+        ))
     .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +32,7 @@ builder.Services.AddSerilog(
 
 if (config.Server.ShutDownTime.HasValue)
 {
+    Log.Logger.Information("Using non-default shut down time of {ShutDownTime}", config.Server.ShutDownTime.Value.ToString("g"));
     builder.WebHost.UseShutdownTimeout(config.Server.ShutDownTime.Value);
 }
 
@@ -46,7 +54,12 @@ var app = builder.Build();
 app.Lifetime.ApplicationStarted.Register(
     () =>
     {
-        Log.Logger.Information("Starting application");
+        var process = Process.GetCurrentProcess();
+
+        Log.Logger.Information(
+            "Started application. ProcessName: {ProcessName}, ProcessId: {ProcessId}",
+            process.ProcessName,
+            process.Id);
     });
 
 app.Lifetime.ApplicationStopping.Register(

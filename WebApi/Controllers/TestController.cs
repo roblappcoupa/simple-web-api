@@ -17,69 +17,62 @@ public class TestController(
     private readonly ILogger<TestController> logger = logger;
 
     [HttpGet("call-api")]
-    public async Task<TestModel> CallApi(
-        [FromQuery] int? serverSideDelay,
+    public async Task<IActionResult> CallApi(
+        [FromQuery(Name = "serverSideDelay")] int[] serverSideDelays,
         [FromQuery] int? clientTimeout,
         [FromQuery] bool useClientSideCancellationToken,
         [FromQuery] bool useServerSideCancellationToken,
         CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
-            "Handling request {Name}. ServerSideDelay: {ServerSideDelay}, ClientTimeout: {ClientTimeout}, UseClientSideCancellationToken: {UseClientSideCancellationToken}, UseServerSideCancellationToken: {UseServerSideCancellationToken}",
+            "Handling request {Name}. ServerSideDelays: {ServerSideDelays}, ClientTimeout: {ClientTimeout}, UseClientSideCancellationToken: {UseClientSideCancellationToken}, UseServerSideCancellationToken: {UseServerSideCancellationToken}",
             nameof(this.CallApi),
-            serverSideDelay.HasValue ? serverSideDelay.Value.ToString() : "None",
+            string.Join(",", serverSideDelays),
             clientTimeout.HasValue ? clientTimeout.Value.ToString() : "None",
             useClientSideCancellationToken,
             useServerSideCancellationToken);
 
-        var result = await this.testService.CallApi(
-            serverSideDelay,
+        await this.testService.CallApi(
+            serverSideDelays,
             clientTimeout,
             useClientSideCancellationToken,
             useServerSideCancellationToken,
             cancellationToken);
 
-            this.logger.LogInformation("Completed request");
+        this.logger.LogInformation("Completed requests");
 
-        return result;
+        return this.Ok();
     }
     
     [HttpGet("sql-query")]
-    public async Task<TestModel> ExecuteSqlQuery(
-        [FromQuery] int queryDelayInSeconds,
-        [FromQuery] int? postQueryDelayInSeconds,
+    public async Task<IActionResult> ExecuteSqlQuery(
+        [FromQuery(Name = "queryDelayInSeconds")] int[] queryDelaysInSeconds,
         [FromQuery] int commandTimeoutInSeconds,
         [FromQuery] bool useCancellationToken,
         [FromQuery(Name = "throw")] bool throwException,
         CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
-            "Handling request {Name}. QueryDelay: {Delay}, PostQueryDelay: {PostQueryDelay}, CommandTimeout: {CommandTimeout}, UseCancellationToken: {UseCancellationToken}, Throw: {Throw}",
+            "Handling request {Name}. QueryDelays: {Delays}, CommandTimeout: {CommandTimeout}, UseCancellationToken: {UseCancellationToken}, Throw: {Throw}",
             nameof(this.ExecuteSqlQuery),
-            queryDelayInSeconds,
-            postQueryDelayInSeconds.HasValue ? postQueryDelayInSeconds.Value.ToString() : "NONE",
+            string.Join(",", queryDelaysInSeconds),
             commandTimeoutInSeconds,
             useCancellationToken,
             throwException);
 
         await this.testService.ExecuteSqlQuery(
-            queryDelayInSeconds,
-            postQueryDelayInSeconds,
+            queryDelaysInSeconds,
             commandTimeoutInSeconds,
             throwException,
             useCancellationToken ? cancellationToken : CancellationToken.None);
 
         this.logger.LogInformation("Completed request");
 
-        return new TestModel
-        {
-            Id = Guid.NewGuid(),
-            Status = "Complete"
-        };
+        return this.Ok();
     }
 
     [HttpGet("delay")]
-    public async Task<TestModel> Delay(
+    public async Task<IActionResult> Delay(
         [FromQuery] int? delay,
         [FromQuery] bool useCancellationToken,
         CancellationToken cancellationToken)
@@ -97,10 +90,6 @@ public class TestController(
         
         this.logger.LogInformation("Completed request");
 
-        return new TestModel
-        {
-            Id = Guid.NewGuid(),
-            Status = "OK"
-        };
+        return this.Ok();
     }
 }

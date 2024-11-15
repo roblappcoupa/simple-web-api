@@ -5,20 +5,18 @@ using Flurl.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using WebApi.Configuration;
-using WebApi.Models;
 
 public interface ITestService
 {
-    Task<TestModel> CallApi(
-        int? serverSideDelay,
+    Task CallApi(
+        int[] serverSideDelays,
         int? clientTimeout,
         bool useClientSideCancellationToken,
         bool useServerSideCancellationToken,
         CancellationToken cancellationToken);
 
     Task ExecuteSqlQuery(
-        int delayInSeconds,
-        int? postQueryDelayInSeconds,
+        int[] delaysInSeconds,
         int commandTimeoutInSeconds,
         bool throwException,
         CancellationToken cancellationToken);
@@ -35,8 +33,8 @@ internal sealed class TestService : ITestService
         this.logger = logger;
     }
 
-    public async Task<TestModel> CallApi(
-        int? serverSideDelay,
+    public async Task CallApi(
+        int[] serverSideDelays,
         int? clientTimeout,
         bool useClientSideCancellationToken,
         bool useServerSideCancellationToken,
@@ -50,71 +48,80 @@ internal sealed class TestService : ITestService
         var url = this.options.CurrentValue.Api.ApiBaseUrl
             .AppendPathSegment("api/v1/test/delay")
             .AppendQueryParam("useCancellationToken", useServerSideCancellationToken);
-
-        if (serverSideDelay.HasValue)
+        
+        this.logger.LogInformation("Sending {Total} requests", serverSideDelays.Length);
+        
+        for (var i = 0; i < serverSideDelays.Length; i++)
         {
-            url = url.AppendQueryParam("delay", serverSideDelay.Value);
+            var serverSideDelay = serverSideDelays[i];
+            
+            this.logger.LogInformation(
+                "Sending request {Count}/{Total}, ServerDelay: {Delay} seconds, ClientTimeout: {ClientTimeout}",
+                i + 1,
+                serverSideDelays.Length,
+                serverSideDelay,
+                clientTimeout);
+
+            url = url.AppendQueryParam("delay", serverSideDelay);
+
+            var response = await SendRequest(
+                url,
+                clientTimeout,
+                useClientSideCancellationToken ? cancellationToken : CancellationToken.None);
+
+            this.logger.LogInformation(
+                "Completed request {Count}/{Total}, StatusCode: {StatusCode}",
+                i + 1,
+                serverSideDelays.Length,
+                response.StatusCode);
         }
         
-        if (clientTimeout.HasValue)
-        {
-            return await url
-                .WithTimeout(clientTimeout.Value)
-                .GetJsonAsync<TestModel>(
-                    cancellationToken: useClientSideCancellationToken ? cancellationToken : CancellationToken.None);
-        }
-
-        var result = await url.GetJsonAsync<TestModel>(
-            cancellationToken: useClientSideCancellationToken ? cancellationToken : CancellationToken.None);
-
-        return result;
+        this.logger.LogInformation("Completed sending {Total} requests", serverSideDelays.Length);
     }
     
     public async Task ExecuteSqlQuery(
-        int delayInSeconds,
-        int? postQueryDelayInSeconds,
+        int[] delaysInSeconds,
         int commandTimeoutInSeconds,
         bool throwException,
         CancellationToken cancellationToken)
     {
-        // Create a time string for WAITFOR DELAY in format 'hh:mm:ss'
-        var delayTime = TimeSpan.FromSeconds(delayInSeconds).ToString(@"hh\:mm\:ss");
-
-        // Define the query with the delay
-        var query = $"WAITFOR DELAY '{delayTime}';";
-
-        // Set up your SQL connection and command
-        await using var connection = new SqlConnection(this.options.CurrentValue.SqlServer.ConnectionString);
-        await using var command = new SqlCommand(query, connection);
-
-        command.CommandTimeout = commandTimeoutInSeconds;
-
         try
         {
-            await connection.OpenAsync(cancellationToken);
-
-            this.logger.LogInformation(
-                "Sql delay: {Delay} seconds, Command timeout: {CommandTimeout}",
-                delayInSeconds,
-                commandTimeoutInSeconds);
+            await using var connection = new SqlConnection(this.options.CurrentValue.SqlServer.ConnectionString);
             
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            await connection.OpenAsync(cancellationToken);
+            
+            this.logger.LogInformation("Running {Total} queries", delaysInSeconds.Length);
 
-            this.logger.LogInformation(
-                "Completed query");
-
-            if (postQueryDelayInSeconds == null)
+            for(var i = 0; i < delaysInSeconds.Length; i++)
             {
-                return;
+                var delayInSeconds = delaysInSeconds[i];
+                
+                // Create a time string for WAITFOR DELAY in format 'hh:mm:ss'
+                var delayTime = TimeSpan.FromSeconds(delayInSeconds).ToString(@"hh\:mm\:ss");
+                
+                var query = $"WAITFOR DELAY '{delayTime}';";
+                
+                await using var command = new SqlCommand(query, connection);
+
+                command.CommandTimeout = commandTimeoutInSeconds;
+
+                this.logger.LogInformation(
+                    "Running query {Count}/{Total}, Delay: {Delay} seconds, CommandTimeout: {CommandTimeout}",
+                    i + 1,
+                    delaysInSeconds.Length,
+                    delayInSeconds,
+                    commandTimeoutInSeconds);
+            
+                await command.ExecuteNonQueryAsync(cancellationToken);
+
+                this.logger.LogInformation(
+                    "Completed query {Count}/{Total}",
+                    i + 1,
+                    delaysInSeconds.Length);
             }
             
-            this.logger.LogInformation(
-                "Delaying for {Seconds} seconds", postQueryDelayInSeconds.Value);
-
-            await Task.Delay(TimeSpan.FromSeconds(postQueryDelayInSeconds.Value), cancellationToken);
-            
-            this.logger.LogInformation(
-                "Completed delaying for {Seconds} seconds", postQueryDelayInSeconds.Value);
+            this.logger.LogInformation("Completed running {Total} queries", delaysInSeconds.Length);
         }
         catch (Exception exception)
         {
@@ -127,5 +134,20 @@ internal sealed class TestService : ITestService
                 throw;
             }
         }
+    }
+
+    private static async Task<IFlurlResponse> SendRequest(
+        Url url,
+        int? clientTimeout,
+        CancellationToken cancellationToken)
+    {
+        if (clientTimeout.HasValue)
+        {
+            return await url
+                .WithTimeout(clientTimeout.Value)
+                .GetAsync(cancellationToken: cancellationToken);
+        }
+
+        return await url.GetAsync(cancellationToken: cancellationToken);
     }
 }
