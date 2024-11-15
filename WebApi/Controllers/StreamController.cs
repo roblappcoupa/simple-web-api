@@ -8,14 +8,9 @@ using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class StreamController : ControllerBase
+public class StreamController(ILogger<StreamController> logger) : ControllerBase
 {
-    private readonly ILogger<StreamController> logger;
-    
-    public StreamController(ILogger<StreamController> logger)
-    {
-        this.logger = logger;
-    }
+    private readonly ILogger<StreamController> logger = logger;
 
     [HttpGet]
     public async Task StreamData(

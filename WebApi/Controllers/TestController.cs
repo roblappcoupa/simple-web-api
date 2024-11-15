@@ -8,19 +8,14 @@ using WebApi.Services;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class TestController : ControllerBase
+public class TestController(
+    ITestService testService,
+    ILogger<TestController> logger) : ControllerBase
 {
-    private readonly ITestService testService;
-    private readonly ILogger<TestController> logger;
-    
-    public TestController(
-        ITestService testService,
-        ILogger<TestController> logger)
-    {
-        this.testService = testService;
-        this.logger = logger;
-    }
-    
+    private readonly ITestService testService = testService;
+
+    private readonly ILogger<TestController> logger = logger;
+
     [HttpGet("call-api")]
     public async Task<TestModel> CallApi(
         [FromQuery] int? serverSideDelay,
@@ -30,7 +25,8 @@ public class TestController : ControllerBase
         CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
-            "Handling request. ServerSideDelay: {ServerSideDelay}, ClientTimeout: {ClientTimeout}, UseClientSideCancellationToken: {UseClientSideCancellationToken}, UseServerSideCancellationToken: {UseServerSideCancellationToken}",
+            "Handling request {Name}. ServerSideDelay: {ServerSideDelay}, ClientTimeout: {ClientTimeout}, UseClientSideCancellationToken: {UseClientSideCancellationToken}, UseServerSideCancellationToken: {UseServerSideCancellationToken}",
+            nameof(this.CallApi),
             serverSideDelay.HasValue ? serverSideDelay.Value.ToString() : "None",
             clientTimeout.HasValue ? clientTimeout.Value.ToString() : "None",
             useClientSideCancellationToken,
@@ -42,6 +38,8 @@ public class TestController : ControllerBase
             useClientSideCancellationToken,
             useServerSideCancellationToken,
             cancellationToken);
+
+            this.logger.LogInformation("Completed request");
 
         return result;
     }
@@ -71,6 +69,8 @@ public class TestController : ControllerBase
             throwException,
             useCancellationToken ? cancellationToken : CancellationToken.None);
 
+        this.logger.LogInformation("Completed request");
+
         return new TestModel
         {
             Id = Guid.NewGuid(),
@@ -85,7 +85,8 @@ public class TestController : ControllerBase
         CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
-            "Handling request. Delay: {Delay}, UseCancellationToken: {UseCancellationToken}",
+            "Handling request {Name}. Delay: {Delay}, UseCancellationToken: {UseCancellationToken}",
+            nameof(this.Delay),
             delay.HasValue ? delay.Value.ToString() : "None",
             useCancellationToken);
 

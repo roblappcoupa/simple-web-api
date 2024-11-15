@@ -1,5 +1,10 @@
+using Serilog;
 using WebApi.Configuration;
 using WebApi.Services;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +16,13 @@ builder.Services.Configure<ApplicationConfiguration>(configurationSection);
 ApplicationConfiguration config = new();
 configurationSection.Bind(config);
 
+builder.Services.AddSerilog(
+    x =>
+    {
+        x.MinimumLevel.Warning()
+            .ReadFrom.Configuration(builder.Configuration);
+    });
+
 if (config.Server.ShutDownTime.HasValue)
 {
     builder.WebHost.UseShutdownTimeout(config.Server.ShutDownTime.Value);
@@ -18,19 +30,22 @@ if (config.Server.ShutDownTime.HasValue)
 
 builder.Services.AddControllers();
 
-builder.Services.AddHttpLogging(
-    options =>
-    {
-        options.RequestHeaders.Add("X-Real-IP");
-        options.RequestHeaders.Add("X-Forwarded-For");
-        options.RequestHeaders.Add("X-Forwarded-Proto");
-    });
+// FOR REQUEST LOGGING
+// builder.Services.AddHttpLogging(
+//     options =>
+//     {
+//         options.RequestHeaders.Add("X-Real-IP");
+//         options.RequestHeaders.Add("X-Forwarded-For");
+//         options.RequestHeaders.Add("X-Forwarded-Proto");
+//     });
 
 builder.Services.AddScoped<ITestService, TestService>();
 
 var app = builder.Build();
 
-app.UseHttpLogging();
+// FOR REQUEST LOGGING
+// app.UseHttpLogging();
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
