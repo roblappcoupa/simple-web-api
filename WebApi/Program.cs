@@ -43,6 +43,24 @@ builder.Services.AddScoped<ITestService, TestService>();
 
 var app = builder.Build();
 
+app.Lifetime.ApplicationStarted.Register(
+    () =>
+    {
+        Log.Logger.Information("Starting application");
+    });
+
+app.Lifetime.ApplicationStopping.Register(
+    () =>
+    {
+        Log.Logger.Information("Stopping application");
+    });
+
+app.Lifetime.ApplicationStopped.Register(
+    () =>
+    {
+        Log.Logger.Information("Stopped application");
+    });
+
 // FOR REQUEST LOGGING
 // app.UseHttpLogging();
 app.UseSerilogRequestLogging();
