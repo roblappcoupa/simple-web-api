@@ -33,11 +33,14 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         eventSource.onerror = function(e) {
-            console.error('EventSource failed:', e);
+            if (eventSource.readyState === EventSource.CLOSED) {
+                console.log('Connection closed by server');
+            } else {
+                console.error('EventSource error:', e);
 
-            // Display an error message
-            messagesTextArea.value += 'Connection error occurred.\n';
-
+                // Display an error message
+                messagesTextArea.value += 'Connection error occurred.\n';
+            }
             // Close the connection and update button states
             if (eventSource) {
                 eventSource.close();
