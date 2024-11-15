@@ -33,15 +33,19 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         eventSource.onerror = function(e) {
-            if (eventSource.readyState === EventSource.CLOSED) {
-                console.log('Connection closed by server');
-            } else {
-                console.error('EventSource error:', e);
-
-                // Display an error message
-                messagesTextArea.value += 'Connection error occurred.\n';
-            }
-            // Close the connection and update button states
+            // console.log(e.target);
+            // console.log(e.target.readyState);
+            //
+            // console.log(eventSource);
+            // console.log(eventSource.readyState);
+            //
+            // if (eventSource.readyState === EventSource.CLOSED) {
+            //     console.log('Connection closed by server');
+            // } else {
+            //     console.error('EventSource error:', e);
+            //     messagesTextArea.value += 'Connection error occurred.\n';
+            // }
+            
             if (eventSource) {
                 eventSource.close();
                 eventSource = null;
