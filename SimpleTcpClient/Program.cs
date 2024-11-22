@@ -40,3 +40,20 @@ using (var client = new TcpClient())
 }
 
 Console.WriteLine("Client disconnected.");
+
+return;
+
+static string RandomString(int byteCount)
+{
+    const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var random = new Random();
+
+    // Each char is 2 bytes, so divide byteCount by 2
+    int charCount = byteCount / 2;
+
+    return new string(Enumerable
+        .Repeat(chars, charCount)
+        .Select(s => s[random.Next(s.Length)])
+        .ToArray());
+}
+

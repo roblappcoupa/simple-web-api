@@ -10,6 +10,13 @@ while (true)
 {
     var client = await listener.AcceptTcpClientAsync();
     _ = HandleClientAsync(client); // Fire and forget Task runs on a thread pool thread
+    
+    // Kestrel does this:
+    // ThreadPool.QueueUserWorkItem(
+    //     () =>
+    //     {
+    //         // Handle
+    //     });
 }
 
 static async Task HandleClientAsync(TcpClient client)
@@ -26,10 +33,10 @@ static async Task HandleClientAsync(TcpClient client)
             if (bytesRead == 0) // FIN packet received
             {
                 Console.WriteLine("Client sent FIN packet (connection closing).");
-                break; // Exit the loop, client is closing the connection
-            }
 
-            // Log and process the received data
+                break;
+            }
+            
             var message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Console.WriteLine($"Received: {message}");
             
@@ -37,9 +44,10 @@ static async Task HandleClientAsync(TcpClient client)
             await stream.WriteAsync(Encoding.UTF8.GetBytes($"The server received this message from you: {message}"));
         }
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-        Console.WriteLine($"Error: {ex.Message}");
+        Console.WriteLine("An Exception was thrown");
+        Console.WriteLine(exception);
     }
     finally
     {

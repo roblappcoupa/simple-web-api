@@ -39,16 +39,16 @@ services:
       - ASPNETCORE_HTTP_PORTS=5012
     env_file: "WebApi/webapi.env"
 
-  downstream_webapi:
+  upstream_webapi:
     build:
       context: ./WebApi
       dockerfile: Dockerfile
-    container_name: downstream_webapi
+    container_name: upstream_webapi
     ports:
       - "5013:5013"
     environment:
       - ASPNETCORE_HTTP_PORTS=5013
-    env_file: "WebApi/downstream_webapi.env"
+    env_file: "WebApi/upstream_webapi.env"
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
