@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Substitute environment variables in nginx.conf and output to a temp file
-envsubst '${LISTEN_PORT} ${PROXY_HOST}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+# Substitute environment variables in nginx.conf and output to a template file
+envsubst '${LISTEN_PORT} ${PROXY_HOST} ${BUFFERING} ${TIMEOUT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Start NGINX
 nginx -g 'daemon off;'

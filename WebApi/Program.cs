@@ -1,9 +1,9 @@
-using System.Diagnostics;
 using Serilog;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
 using WebApi.Configuration;
 using WebApi.Services;
+using WebApi.Utils;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(
@@ -19,6 +19,12 @@ builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, relo
 
 var configurationSection = builder.Configuration.GetSection("WebApi");
 builder.Services.Configure<ApplicationConfiguration>(configurationSection);
+
+builder.WebHost.ConfigureKestrel(
+    kestrelServerOptions =>
+    {
+        Log.Logger.Information("Kestrel keep-alive timeout: {KeepAliveTimeout}", kestrelServerOptions.Limits.KeepAliveTimeout.ToString("g"));
+    });
 
 ApplicationConfiguration config = new();
 configurationSection.Bind(config);
@@ -47,13 +53,13 @@ builder.Services.AddCors(
     });
 
 // FOR ALTERNATIVE REQUEST LOGGING
-// builder.Services.AddHttpLogging(
-//     options =>
-//     {
-//         options.RequestHeaders.Add("X-Real-IP");
-//         options.RequestHeaders.Add("X-Forwarded-For");
-//         options.RequestHeaders.Add("X-Forwarded-Proto");
-//     });
+builder.Services.AddHttpLogging(
+    options =>
+    {
+        options.RequestHeaders.Add("X-Real-IP");
+        options.RequestHeaders.Add("X-Forwarded-For");
+        options.RequestHeaders.Add("X-Forwarded-Proto");
+    });
 
 builder.Services.AddScoped<ITestService, TestService>();
 
@@ -65,28 +71,7 @@ if (config.Server.ShutDownTime.HasValue)
 
 var app = builder.Build();
 
-app.Lifetime.ApplicationStarted.Register(
-    () =>
-    {
-        var process = Process.GetCurrentProcess();
-
-        Log.Logger.Information(
-            "Started application. ProcessName: {ProcessName}, ProcessId: {ProcessId}",
-            process.ProcessName,
-            process.Id);
-    });
-
-app.Lifetime.ApplicationStopping.Register(
-    () =>
-    {
-        Log.Logger.Information("Stopping application");
-    });
-
-app.Lifetime.ApplicationStopped.Register(
-    () =>
-    {
-        Log.Logger.Information("Stopped application");
-    });
+app.AddSerilogHostingLifetimeEventLogging();
 
 if (app.Environment.IsDevelopment())
 {
@@ -94,9 +79,9 @@ if (app.Environment.IsDevelopment())
 }
 
 // FOR ALTERNATIVE REQUEST LOGGING
-// app.UseHttpLogging();
+app.UseHttpLogging();
 
-app.UseSerilogRequestLogging();
+// app.UseSerilogRequestLogging();
 
 app.UseStaticFiles();
 

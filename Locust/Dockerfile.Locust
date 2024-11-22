@@ -1,0 +1,15 @@
+# Dockerfile.locust
+FROM python:3.9
+
+# Set the working directory in the container
+WORKDIR /locust
+
+# Copy the Locust script into the container
+COPY locustfile.py /locust/
+
+# Install required packages
+RUN pip install locust
+
+# Command to run Locust
+ENTRYPOINT ["locust", "-f", "locustfile.py", "--host=http://toplevelproxy:5010"]
+

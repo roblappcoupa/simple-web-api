@@ -8,6 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- We copy all appsettings.*.json files to the output except on Release builds, we exclude appsettings.local.json -->
+        <None Update="appsettings*.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="appsettings.local.json" Condition="'$(Configuration)' == 'Release'">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Bogus" Version="35.6.1" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.0" />

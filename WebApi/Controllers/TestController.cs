@@ -3,6 +3,7 @@ namespace WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
+using WebApi.Models;
 using WebApi.Services;
 
 [ApiController]
@@ -14,6 +15,39 @@ public class TestController(
     private readonly ITestService testService = testService;
 
     private readonly ILogger<TestController> logger = logger;
+
+    [HttpGet("static-json")]
+    public TestModel GetJson()
+        => new()
+        {
+            Id = Guid.NewGuid(),
+            Status = "Some status"
+        };
+
+    [HttpGet("action-result")]
+    public IActionResult GetJsonActionResult()
+        => this.Ok(
+            new TestModel
+            {
+                Id = Guid.NewGuid(),
+                Status = "Some status"
+            });
+
+    [HttpGet("json")]
+    public List<TestModel> GetJson([FromQuery]int n)
+    {
+        var objects = Enumerable
+            .Range(1, n)
+            .Select(
+                x => new TestModel
+                {
+                    Id = Guid.NewGuid(),
+                    Status = $"Some status for object {x}"
+                })
+            .ToList();
+
+        return objects;
+    }
 
     [HttpGet("call-api")]
     public async Task<IActionResult> CallApi(
@@ -84,7 +118,25 @@ public class TestController(
 
         if (delay.HasValue)
         {
-            await Task.Delay(TimeSpan.FromSeconds(delay.Value), useCancellationToken ? cancellationToken : CancellationToken.None);
+            cancellationToken.Register(
+                () =>
+                {
+                    this.logger.LogInformation("CancellationToken was set");
+                });
+
+            CancellationToken cancellationTokenToUse;
+            if (useCancellationToken)
+            {
+                cancellationTokenToUse = cancellationToken;
+                this.logger.LogInformation("Used request CancellationToken");
+            }
+            else
+            {
+                cancellationTokenToUse = CancellationToken.None;
+                this.logger.LogInformation("Used CancellationToken.None");
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(delay.Value), cancellationTokenToUse);
         }
         
         this.logger.LogInformation("Completed request");

@@ -4,6 +4,8 @@ using Bogus;
 using FileGenerator;
 using Microsoft.Extensions.Configuration;
 
+Console.WriteLine("Starting...");
+
 IConfiguration configurationRoot = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
@@ -15,9 +17,14 @@ configurationRoot.Bind(config);
 
 var targetSizeInBytes = config.TargetSizeInMegaBytes * 1024 * 1024;
 
+JsonSerializerOptions jsonOptions = new(JsonSerializerOptions.Default)
+{
+    WriteIndented = true
+};
+
 Console.WriteLine(
     "Creating a file with random text with the following settings:\n{0}",
-    JsonSerializer.Serialize(config));
+    JsonSerializer.Serialize(config, jsonOptions));
 
 if (config.ChunkSizeInBytes > targetSizeInBytes)
 {
@@ -60,7 +67,7 @@ static string GenerateRandomText(Faker faker, int chunkSizeInBytes)
 
     while (randomText.Length < chunkSizeInBytes)
     {
-        randomText.AppendLine(faker.Lorem.Sentence());
+        randomText.AppendLine(faker.Random.Words(10));
     }
 
     randomText.Length = chunkSizeInBytes;

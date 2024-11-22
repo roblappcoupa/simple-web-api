@@ -4,15 +4,30 @@ public class WordCountResult
 {
     public WordCountResult(
         string fileName,
-        Dictionary<string, int> counts = null)
+        List<WordCount> counts = null)
     {
         this.FileName = fileName;
         this.Counts = counts == null
-            ? new Dictionary<string, int>()
-            : new Dictionary<string, int>(counts);
+            ? []
+            : [..counts];
     }
 
     public string FileName { get; }
 
-    public Dictionary<string, int> Counts { get; }
+    public List<WordCount> Counts { get; }
+}
+
+public class WordCount
+{
+    public WordCount(
+        string word,
+        long frequency)
+    {
+        this.Word = word;
+        this.Frequency = frequency;
+    }
+
+    public string Word { get; }
+    
+    public long Frequency { get; }
 }
