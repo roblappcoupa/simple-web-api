@@ -11,6 +11,7 @@ services:
       # - PROXY_HOST=host.docker.internal:5012 # If running webapi in an IDE, you can use this
       - PROXY_HOST=webapi:5012
       - TIMEOUT=20
+      - SHORT_TIMEOUT=5
       - BUFFERING=on
 
   toplevelproxy:
@@ -25,7 +26,8 @@ services:
     environment:
       - LISTEN_PORT=5010
       - PROXY_HOST=apigateway:5011
-      - TIMEOUT=10
+      - TIMEOUT=20
+      - SHORT_TIMEOUT=5
       - BUFFERING=on
 
   webapi:
