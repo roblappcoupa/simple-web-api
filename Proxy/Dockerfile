@@ -6,8 +6,8 @@ COPY nginx.conf /etc/nginx/nginx.conf.template
 # Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 
-# Make the entrypoint script executable
-RUN chmod +x /entrypoint.sh
+# Ensure Unux line endings and make it executable
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Install fswatch
 RUN apt-get update && \
