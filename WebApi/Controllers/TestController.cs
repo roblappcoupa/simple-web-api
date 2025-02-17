@@ -63,7 +63,9 @@ public class TestController(
 
         var obj = new
         {
-            HostName = this.HttpContext.Request.Host.Value,
+            Host = this.HttpContext.Request.Host.Value.ToString(),
+            Path = this.HttpContext.Request.Path.ToString(),
+            QueryString = this.HttpContext.Request.QueryString.ToString(),
             RemoteIpAddress = connection.RemoteIpAddress?.ToString(),
             connection.RemotePort,
             LocalIpAddress = connection.LocalIpAddress?.ToString(),
