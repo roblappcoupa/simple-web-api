@@ -62,7 +62,7 @@ curl http://localhost:5013/api/v1/test/delay?delay=10 -v -i --connect-timeout 5
 ### top level proxy
 Proxy timeout
 ```
-curl http://localhost:5010/api/v1/test/delay?delay=10 -v -i --connect-timeout 5
+curl http://localhost:5010/buffering-off/api/v1/test/delay?delay=10 -v -i --connect-timeout 5
 ```
 
 ### top level proxy

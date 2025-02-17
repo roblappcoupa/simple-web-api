@@ -12,7 +12,7 @@ services:
       - PROXY_HOST=webapi:5012
       - TIMEOUT=20
       - SHORT_TIMEOUT=5
-      - BUFFERING=on
+      - BUFFERING=off
 
   toplevelproxy:
     build:
@@ -28,7 +28,7 @@ services:
       - PROXY_HOST=apigateway:5011
       - TIMEOUT=20
       - SHORT_TIMEOUT=5
-      - BUFFERING=on
+      - BUFFERING=off
 
   webapi:
     build:

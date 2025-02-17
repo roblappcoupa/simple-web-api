@@ -49,6 +49,32 @@ public class TestController(
         return objects;
     }
 
+    [HttpGet("~/health")]
+    public IActionResult PerformCheck() => this.Ok("Healthy");
+
+    [HttpGet("~/connection")]
+    public IActionResult ConnectionInfo()
+    {
+        var connection = this.HttpContext.Connection;
+
+        var headers = this.HttpContext.Request.Headers
+            .Select(x => $"{x.Key}: {x.Value.ToString()}")
+            .ToList();
+
+        var obj = new
+        {
+            HostName = this.HttpContext.Request.Host.Value,
+            RemoteIpAddress = connection.RemoteIpAddress?.ToString(),
+            connection.RemotePort,
+            LocalIpAddress = connection.LocalIpAddress?.ToString(),
+            connection.LocalPort,
+            RequestHeaders = headers,
+            this.HttpContext.Request.Protocol
+        };
+
+        return this.Ok(obj);
+    }
+
     [HttpGet("call-api")]
     public async Task<IActionResult> CallApi(
         [FromQuery(Name = "serverSideDelay")] int[] serverSideDelays,
